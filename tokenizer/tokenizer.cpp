@@ -146,18 +146,34 @@ namespace miniplc0 {
 				// 如果读到的是字母，则存储读到的字符，并切换状态到标识符
 				// 如果读到的字符不是上述情况之一，则回退读到的字符，并解析已经读到的字符串为整数
 				//     解析成功则返回无符号整数类型的token，否则返回编译错误
-				if (!current_char.has_value()) {
-					int tmp;
-					ss >> tmp;
-					if (ss.eof() && !ss.fail()) {
-						return std::make_pair(std::make_optional<Token>(TokenType::UNSIGNED_INTEGER, tmp, pos, currentPos()), std::optional<CompilationError>());
-					}
-					else {
-						//error type?
-						return std::make_pair(std::optional<Token>(), std::make_optional<CompilationError>(pos, ErrorCode::ErrStreamError));
-					}
-				}
 				auto ch = current_char.value();
+				if (!current_char.has_value()) {
+					//int tmp;
+					//ss >> tmp;
+					//////eof
+					//if (!ss.fail()) {
+					//	return std::make_pair(std::make_optional<Token>(TokenType::UNSIGNED_INTEGER, tmp, pos, currentPos()), std::optional<CompilationError>());
+					//}
+					//else {
+					//	//error type?
+					//	return std::make_pair(std::optional<Token>(), std::make_optional<CompilationError>(pos, ErrorCode::ErrStreamError));
+					//}
+					int64_t result_num;
+					std::string str = ss.str();
+					while (str.size() > 1 && str[0] == '0')
+					{
+						str = str.substr(1);
+					}
+					int len = str.length();
+					ss >> result_num;
+					if (len > 10 || (len == 10 && result_num > 2147483647))
+						return std::make_pair(std::optional<Token>(), std::make_optional<CompilationError>(pos,
+							ErrorCode::ErrIntegerOverflow));
+					else
+						return std::make_pair(
+							std::make_optional<Token>(TokenType::UNSIGNED_INTEGER, str, pos,
+								currentPos()), std::optional<CompilationError>());
+				}
 				if (miniplc0::isdigit(ch)) {
 					ss << ch;
 				}
@@ -167,14 +183,30 @@ namespace miniplc0 {
 				}
 				else {
 					unreadLast();
-					int tmp;
-					ss >> tmp;
-					if (ss.eof() && !ss.fail()) {
-						return std::make_pair(std::make_optional<Token>(TokenType::UNSIGNED_INTEGER, tmp, pos, currentPos()), std::optional<CompilationError>());
+					//int tmp;
+					//ss >> tmp;
+					//////
+					//if (!ss.fail()) {
+					//	return std::make_pair(std::make_optional<Token>(TokenType::UNSIGNED_INTEGER, tmp, pos, currentPos()), std::optional<CompilationError>());
+					//}
+					//else {
+					//	return std::make_pair(std::optional<Token>(), std::make_optional<CompilationError>(pos, ErrorCode::ErrStreamError));
+					//}
+					int64_t result_num;
+					std::string str = ss.str();
+					while (str.size() > 1 && str[0] == '0')
+					{
+						str = str.substr(1);
 					}
-					else {
-						return std::make_pair(std::optional<Token>(), std::make_optional<CompilationError>(pos, ErrorCode::ErrStreamError));
-					}
+					int len = str.length();
+					ss >> result_num;
+					if (len > 10 || (len == 10 && result_num > 2147483647))
+						return std::make_pair(std::optional<Token>(), std::make_optional<CompilationError>(pos,
+							ErrorCode::ErrIntegerOverflow));
+					else
+						return std::make_pair(
+							std::make_optional<Token>(TokenType::UNSIGNED_INTEGER, str, pos,
+								currentPos()), std::optional<CompilationError>());
 				}
 				break;
 			}
@@ -185,7 +217,8 @@ namespace miniplc0 {
 				if (!current_char.has_value()) {
 					char tmp[1007];//size
 					ss >> tmp;
-					if (ss.eof() && !ss.fail()) {
+					////
+					if (!ss.fail()) {
 						if (strcmp(tmp, "BEGIN") == 0) {
 							return std::make_pair(std::make_optional<Token>(TokenType::BEGIN, tmp, pos, currentPos()), std::optional<CompilationError>());
 						}
@@ -220,7 +253,8 @@ namespace miniplc0 {
 					unreadLast();
 					char tmp[1007];//size
 					ss >> tmp;
-					if (ss.eof() && !ss.fail()) {
+					////
+					if (!ss.fail()) {
 						if (strcmp(tmp, "BEGIN") == 0) {
 							return std::make_pair(std::make_optional<Token>(TokenType::BEGIN, tmp, pos, currentPos()), std::optional<CompilationError>());
 						}
